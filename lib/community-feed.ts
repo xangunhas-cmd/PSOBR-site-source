@@ -20,6 +20,7 @@ export type Transfer = {
   toClub: string;
   date: string;
   sourceUrl?: string;
+  image?: string;
 };
 
 /* Contrato temporário entre o site e o futuro bot do Discord. */
@@ -37,7 +38,7 @@ export function isHeadlineTransfer(transfer: Transfer) {
 }
 
 export function transferToNews(transfer: Transfer): NewsItem {
-  return {id:`transfer-${transfer.id}`,kind:'transferencia',label:`Mercado${transfer.overall?` · OVR ${transfer.overall}`:''}`,title:`${transfer.player} fecha com ${transfer.toClub}`,summary:`${transfer.fromClub} → ${transfer.toClub}`,date:transfer.date,href:transfer.sourceUrl||'/transferencias'};
+  return {id:`transfer-${transfer.id}`,kind:'transferencia',label:`Mercado${transfer.overall?` · OVR ${transfer.overall}`:''}`,title:`${transfer.player} fecha com ${transfer.toClub}`,summary:`${transfer.fromClub} → ${transfer.toClub}`,date:transfer.date,image:transfer.image,href:transfer.sourceUrl||'/transferencias'};
 }
 
 export const news: NewsItem[] = [...transfers.filter(isHeadlineTransfer).map(transferToNews),...editorialNews];

@@ -2,6 +2,8 @@ import {desc} from 'drizzle-orm';
 import {getDb} from '@/db';
 import {newsRecords, transferRecords} from '@/db/schema';
 import {editorialNews, isHeadlineTransfer, transferToNews, type NewsItem, type Transfer} from '@/lib/community-feed';
+import {findPlayerCard} from '@/lib/catalog';
+import {getPsoMarketSnapshot,type PsoApiState} from '@/lib/pso-api';
 
 function formatDate(value:string){
   const date=new Date(value);
@@ -9,13 +11,41 @@ function formatDate(value:string){
   return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric',timeZone:'America/Sao_Paulo'}).format(date);
 }
 
-export async function getTransfers():Promise<Transfer[]>{
+async function getStoredTransfers():Promise<Transfer[]>{
   try{
     const rows=await getDb().select().from(transferRecords).orderBy(desc(transferRecords.occurredAt)).limit(100);
     return rows.map(row=>({id:row.id,player:row.player,position:row.position||undefined,overall:row.overall,fromClub:row.fromClub,toClub:row.toClub,date:formatDate(row.occurredAt),sourceUrl:row.sourceUrl||undefined}));
   }catch{
     return [];
   }
+}
+
+export async function getTransferFeed():Promise<{transfers:Transfer[];apiState:PsoApiState}>{
+  const [stored,snapshot]=await Promise.all([getStoredTransfers(),getPsoMarketSnapshot()]);
+  const players=new Map(snapshot.players.map(player=>[player.id,player]));
+  const remote=snapshot.events.filter(event=>event.type==='transfer'&&event.playerId&&event.at).map(event=>{
+    const player=players.get(event.playerId!);
+    const playerName=event.playerName||player?.nickname||'Jogador';
+    const card=findPlayerCard(playerName);
+    return {
+      id:`bot-${event.id}`,
+      player:playerName,
+      position:event.position||player?.position||card?.position||undefined,
+      overall:card?.overall,
+      fromClub:event.fromClub||event.oldTeam||'Livre / clube anterior',
+      toClub:event.toClub||event.club||player?.club?.name||'Novo clube',
+      date:formatDate(event.at!),
+      sourceUrl:'/transferencias',
+      image:card?.image,
+    } satisfies Transfer;
+  });
+  const merged=new Map<string,Transfer>();
+  for(const item of [...remote,...stored]) if(!merged.has(item.id)) merged.set(item.id,item);
+  return {transfers:[...merged.values()],apiState:snapshot.state};
+}
+
+export async function getTransfers():Promise<Transfer[]>{
+  return (await getTransferFeed()).transfers;
 }
 
 export async function getNews():Promise<NewsItem[]>{

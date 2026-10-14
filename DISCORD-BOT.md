@@ -1,5 +1,23 @@
 # Bot do Discord — PSO Brasil
 
+## Integração com o bot completo
+
+O bot completo roda como um processo Node.js separado e expõe uma API HTTP somente de leitura. O site consulta essa API apenas no servidor e cruza o nickname de cada transferência com `lib/catalog.ts`. Quando encontra uma carta com overall 84 ou maior, a transferência também aparece automaticamente em Notícias com a imagem da carta.
+
+Configure estes segredos no Worker do site; nunca os coloque no GitHub ou em código enviado ao navegador:
+
+```env
+PSO_API_URL=https://endereco-publico-da-api-do-bot
+PSO_API_KEY=chave-nova-compartilhada-com-o-bot
+PSO_GUILD_ID=id-do-servidor
+```
+
+No processo do bot, `MARKET_API_KEY` deve ter o mesmo valor de `PSO_API_KEY`. A API deve usar HTTPS e `API_ALLOWED_ORIGIN=https://psobr-site-source.xangunhas.workers.dev`.
+
+O bot completo recebe comandos pelo Gateway do Discord. Ao migrar para ele, remova o Interactions Endpoint URL da aplicação anterior ou use uma aplicação Discord separada, para evitar que os comandos sejam desviados para o endpoint antigo do site.
+
+## Integração anterior (legado)
+
 O bot usa comandos do Discord recebidos diretamente pelo site. Assim, não é necessário deixar um computador ou um processo do bot ligado 24 horas.
 
 ## Comandos preparados
