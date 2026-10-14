@@ -1,0 +1,1 @@
+import {Shell,CompetitionCards,Empty} from '@/components/Portal';export default function Page(){return <Shell tag="PSO BRASIL / COMPETIÇÕES" title="Competições" description="Tabelas, jogos e chaveamentos."><CompetitionCards/><Empty title="Temporada em preparação">Clubes e datas serão publicados após a confirmação da organização.</Empty></Shell>}

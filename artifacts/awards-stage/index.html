@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PSOBR · Modelo do palco de premiação</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#eaf0f4;color:#182533;font:15px system-ui,sans-serif}canvas{display:block;width:100%;height:100%}#scene{position:fixed;inset:0}header{position:fixed;top:32px;left:40px;pointer-events:none}header p{font-size:12px;letter-spacing:.18em;color:#637682}h1{font-size:30px;margin:8px 0;letter-spacing:-.045em}header small{color:#637682}footer{position:fixed;bottom:25px;left:0;width:100%;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:0 15px}button,a{background:#fff;border:1px solid #c9d5dc;border-radius:10px;padding:12px 16px;color:#263c4b;cursor:pointer;text-decoration:none;font:inherit;box-shadow:0 6px 22px #182c3b0b}button:hover,a:hover{background:#ddebdc}#status{position:fixed;right:32px;top:36px;color:#637682;font-size:13px}@media(max-width:600px){header{left:20px;top:15px}h1{font-size:22px}#status{top:120px;left:20px}footer{bottom:16px}button,a{padding:10px;font-size:12px}}
+  </style>
+  <style>
+    #celebrate{background:#204a30;color:#f0ffd8;border-color:#204a30;font-weight:700}#celebrate:hover{background:#316541}#celebrate:disabled{cursor:wait;opacity:.6}button:focus-visible,a:focus-visible{outline:3px solid #86b744;outline-offset:3px}
+    #victory{position:fixed;left:0;right:0;top:17%;text-align:center;pointer-events:none;color:#fff1be;opacity:0;transform:translateY(15px) scale(.96);transition:opacity .6s,transform .8s;text-shadow:0 3px 25px #102717}#victory.show{opacity:1;transform:none}#victory span{display:block;font-size:12px;letter-spacing:.3em;font-weight:700}#victory strong{display:block;font-size:clamp(28px,5vw,62px);letter-spacing:-.04em}body.celebrating header,body.celebrating header p,body.celebrating header small,body.celebrating #status{color:#e2ebde}header,#status{transition:color .8s}
+    @media(prefers-reduced-motion:reduce){#victory{transition:none;transform:none}}
+  </style>
+  <script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js","three/addons/":"../../node_modules/three/examples/jsm/"}}</script>
+</head>
+<body>
+  <div id="scene" aria-label="Prévia 3D interativa do palco de premiação"></div>
+  <header><p>PSOBR / ACERVO 3D</p><h1>Palco de premiação</h1><small>Arraste para girar · Role para aproximar</small></header>
+  <span id="status">Carregando modelo…</span>
+  <div id="victory" role="status" aria-live="polite"></div>
+  <footer><button id="celebrate" disabled>🏆 Celebrar título</button><button data-view="perspective">Perspectiva</button><button data-view="front">Frente</button><button data-view="top">Vista superior</button><button data-view="trophy">Troféu</button><button id="palette">Paleta PSOBR</button><a href="../../public/models/psobr-awards-stage.glb" download>Baixar .GLB</a></footer>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { createTitleCelebration } from '../../lib/title-celebration.js';
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#eaf0f4');
+    const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,150);
+    const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+    renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;document.querySelector('#scene').append(renderer.domElement);
+    const pmrem=new THREE.PMREMGenerator(renderer);const room=new RoomEnvironment();const env=pmrem.fromScene(room,.04);scene.environment=env.texture;scene.environmentIntensity=.55;renderer.toneMappingExposure=.95;room.dispose();pmrem.dispose();
+    const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.maxPolarAngle=Math.PI/2-.015;controls.minDistance=1;controls.maxDistance=45;
+    const light=new THREE.DirectionalLight('#fff7e7',1.6);light.position.set(-6,13,8);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-13,right:13,top:10,bottom:-10,near:1,far:40});light.shadow.normalBias=.025;light.shadow.bias=-.00015;scene.add(light,new THREE.HemisphereLight('#f5faff','#94a0ac',.5));
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:'#eaf0f4',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.015;floor.receiveShadow=true;scene.add(floor);
+    const views={perspective:{eye:[13,8.5,19],target:[0,1.6,0]},front:{eye:[0,4,25],target:[0,2,0]},top:{eye:[.01,25,8],target:[0,.5,0]},trophy:{eye:[1.65,2.8,4.3],target:[0,2.05,.65]}};
+    function view(name){const v=views[name]||views.perspective;camera.position.set(...v.eye);controls.target.set(...v.target);controls.update();}
+    view(new URLSearchParams(location.search).get('view')||'perspective');
+    document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>view(b.dataset.view));
+    let model;let green=false;const saved=new Map();
+    document.querySelector('#palette').onclick=()=>{if(!model)return;green=!green;model.traverse(o=>{if(!o.isMesh)return;const m=o.material;if(!saved.has(m))saved.set(m,m.color.clone());if(green&&m.name==='Stage_Blue')m.color.set('#397347');else if(green&&m.name==='Structure_Navy')m.color.set('#173b28');else m.color.copy(saved.get(m));});document.querySelector('#palette').textContent=green?'Paleta original':'Paleta PSOBR';};
+    new GLTFLoader().load('../../public/models/psobr-awards-stage.glb',g=>{model=g.scene;model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});scene.add(model);document.querySelector('#status').textContent='Modelo pronto · GLB';document.querySelector('#celebrate').disabled=false;window.modelReady=true;},undefined,e=>{document.querySelector('#status').textContent='Não foi possível carregar o modelo';console.error(e);});
+    const celebration=createTitleCelebration(scene),clock=new THREE.Clock();
+    const day=new THREE.Color('#eaf0f4'),night=new THREE.Color('#101c23'),floorDay=floor.material.color.clone(),floorNight=new THREE.Color('#253b36');
+    const celebrateButton=document.querySelector('#celebrate'),victory=document.querySelector('#victory');let victoryTimer;
+    celebrateButton.onclick=()=>{
+      clearTimeout(victoryTimer);victory.innerHTML='<span>O TOPO É NOSSO</span><strong>É CAMPEÃO!</strong>';victory.classList.add('show');
+      if(matchMedia('(prefers-reduced-motion: reduce)').matches){victory.style.color='#204a30';victory.style.textShadow='none';victoryTimer=setTimeout(()=>victory.classList.remove('show'),3500);return;}
+      victory.style.color='';victory.style.textShadow='';view('perspective');camera.position.set(16,11,26);controls.target.set(0,3.8,0);controls.update();
+      celebration.start();document.body.classList.add('celebrating');celebrateButton.textContent='Comemoração em andamento…';celebrateButton.disabled=true;
+    };
+    addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+    renderer.setAnimationLoop(()=>{const wasActive=celebration.active;const amount=celebration.update(clock.getDelta());scene.background.copy(day).lerp(night,amount);floor.material.color.copy(floorDay).lerp(floorNight,amount);if(wasActive&&!celebration.active){document.body.classList.remove('celebrating');victory.classList.remove('show');celebrateButton.textContent='🏆 Celebrar novamente';celebrateButton.disabled=false;}controls.update();renderer.render(scene,camera);});
+    addEventListener('pagehide',()=>{clearTimeout(victoryTimer);celebration.dispose();renderer.setAnimationLoop(null);});
+  </script>
+</body>
+</html>

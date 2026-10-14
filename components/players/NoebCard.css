@@ -1,0 +1,313 @@
+.noeb-card {
+  position: relative;
+  width: min(370px, 88vw);
+  isolation: isolate;
+}
+
+/* =========================================================
+ *  PROFILE CARD
+ = *======================================================== */
+
+.noeb-card .pc-card {
+  width: 100%;
+  max-height: 540px;
+
+  border: 1px solid rgba(222, 187, 91, 0.25);
+  border-radius: 30px;
+
+  background: #05140f;
+
+  box-shadow:
+  0 35px 90px rgba(0, 0, 0, 0.45),
+  0 10px 35px rgba(0, 0, 0, 0.25),
+  inset 0 1px 0 rgba(255, 232, 158, 0.08);
+
+  overflow: hidden;
+}
+
+/* Fundo interno */
+
+.noeb-card .pc-inside {
+  background:
+  radial-gradient(
+    circle at 50% 30%,
+    rgba(44, 124, 88, 0.15),
+                  transparent 38%
+  ),
+  radial-gradient(
+    circle at 80% 80%,
+    rgba(188, 146, 49, 0.07),
+                  transparent 38%
+  ),
+  linear-gradient(
+    145deg,
+    #04130e 0%,
+    #063126 48%,
+    #10160d 75%,
+    #171308 100%
+  ) !important;
+}
+
+/* Esconde informações padrão do ProfileCard */
+
+.noeb-card .pc-details {
+  display: none;
+}
+
+/* =========================================================
+ *  FOTO DO JOGADOR
+ = *======================================================== */
+
+.noeb-card .pc-avatar-content {
+  overflow: hidden;
+}
+
+/*
+ *  A imagem continua sendo controlada pelo ProfileCard,
+ *  mas aqui deixamos ela muito mais legível.
+ */
+
+.noeb-card .avatar {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center bottom;
+
+  filter:
+  contrast(1.03)
+  saturate(0.92)
+  brightness(0.94);
+
+  opacity: 1;
+}
+
+/* NOEB gigante no fundo */
+
+.noeb-card .pc-avatar-content::after {
+  content: "NOEB";
+
+  position: absolute;
+  top: 46%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: -1;
+
+  color: rgba(255, 255, 255, 0.035);
+
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -0.07em;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+ *  RATING
+ = *======================================================== */
+
+.noeb-rating {
+  position: absolute;
+  top: 30px;
+  left: 27px;
+
+  z-index: 30;
+
+  display: flex;
+  flex-direction: column;
+
+  color: #eed36e;
+
+  pointer-events: none;
+}
+
+.noeb-rating strong {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 0.85;
+
+  letter-spacing: -0.07em;
+
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.28);
+}
+
+.noeb-rating span {
+  margin-top: 11px;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  letter-spacing: 0.18em;
+}
+
+/* =========================================================
+ *  ESCUDO
+ = *======================================================== */
+
+.noeb-club {
+  position: absolute;
+  top: 29px;
+  right: 26px;
+
+  z-index: 30;
+
+  width: 58px;
+  height: 58px;
+
+  padding: 5px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(238, 211, 110, 0.22);
+  border-radius: 50%;
+
+  background: rgba(3, 18, 13, 0.58);
+
+  box-shadow:
+  0 10px 25px rgba(0, 0, 0, 0.2),
+  inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  pointer-events: none;
+}
+
+.noeb-club img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+/* =========================================================
+ *  NOME
+ = *======================================================== */
+
+.noeb-name {
+  position: absolute;
+  bottom: 29px;
+  left: 50%;
+
+  z-index: 30;
+
+  width: 75%;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  pointer-events: none;
+}
+
+.noeb-line {
+  display: block;
+
+  width: 100%;
+  height: 1px;
+
+  margin-bottom: 14px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(238, 211, 110, 0.65),
+                              transparent
+  );
+}
+
+.noeb-name strong {
+  color: #fff2c2;
+
+  font-size: 30px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  letter-spacing: 0.1em;
+
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.4);
+}
+
+.noeb-position {
+  margin-top: 9px;
+
+  color: rgba(238, 211, 110, 0.72);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.28em;
+}
+
+/* =========================================================
+ *  DIMINUIR REFLEXO DO REACT BITS
+ = *======================================================== */
+
+/* =========================================================
+ *  HOLOGRÁFICO / ESCUDOS
+ = *======================================================== */
+
+.noeb-card .pc-shine {
+  opacity: 0.32 !important;
+  mix-blend-mode: soft-light !important;
+}
+
+.noeb-card .pc-glare {
+  opacity: 0.12 !important;
+  mix-blend-mode: screen !important;
+}
+
+/* Mantém o padrão de escudos visível sem estourar a luz */
+.noeb-card [class*="shine"] {
+  opacity: 0.32 !important;
+}
+
+.noeb-card [class*="glare"] {
+  opacity: 0.12 !important;
+}
+/* =========================================================
+ *  MOBILE
+ = *======================================================== */
+
+@media (max-width: 600px) {
+  .noeb-card {
+    width: min(340px, 88vw);
+  }
+
+  .noeb-rating {
+    top: 25px;
+    left: 22px;
+  }
+
+  .noeb-rating strong {
+    font-size: 48px;
+  }
+
+  .noeb-rating span {
+    font-size: 13px;
+  }
+
+  .noeb-club {
+    top: 24px;
+    right: 22px;
+
+    width: 50px;
+    height: 50px;
+  }
+
+  .noeb-name {
+    bottom: 25px;
+  }
+
+  .noeb-name strong {
+    font-size: 26px;
+  }
+}

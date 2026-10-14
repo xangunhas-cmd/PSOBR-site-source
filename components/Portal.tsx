@@ -1,0 +1,7 @@
+import SiteNav from './SiteNav';
+import type {ReactNode} from 'react';
+import Link from 'next/link';
+export function Footer(){return <footer className="portal-footer"><Link className="portal-brand" href="/"><img src="/psobr-logo.png" alt=""/><span>PSO <b>BRASIL</b><small>FEITO PELA COMUNIDADE.</small></span></Link><p>Dentro do campo. Além do jogo.</p><Link href="/comunidade">Encontre a comunidade ↗</Link></footer>}
+export function Shell({tag,title,description,children}:{tag:string,title:string,description:string,children:ReactNode}){return <main className="psobr portal"><SiteNav/><div className="portal-page"><Link className="portal-back" href="/">← Início</Link><header className="portal-heading"><p className="kicker">{tag}</p><h1>{title}</h1><p>{description}</p></header>{children}</div><Footer/></main>}
+export function Empty({title,children}:{title:string,children:ReactNode}){return <div className="portal-empty"><span className="status-pill">Em organização</span><h3>{title}</h3><p>{children}</p></div>}
+export function CompetitionCards(){return <div className="portal-grid three">{[['01','Brasileirão · Série A','Tabela, jogos e clubes.','serie-a'],['02','Brasileirão · Série B','Tabela, jogos e clubes.','serie-b'],['03','Copa do Brasil','Chaveamento e resultados.','copa-do-brasil']].map(([n,t,d,s])=><Link className="portal-tile" href={'/competicoes/'+s} key={s}><span className="tile-number">{n}</span><span className="status-pill">Preparação</span><h3>{t}</h3><p>{d}</p><span className="tile-link">Abrir ↗</span></Link>)}</div>}
