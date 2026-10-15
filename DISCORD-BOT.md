@@ -2,7 +2,7 @@
 
 ## Integração direta com a base do bot
 
-O site lê diretamente o registro `global` da tabela `pso_bot_state` na base D1 vinculada como `DB`. O estado completo permanece no servidor; somente jogadores, imagens públicas, clubes e movimentações necessárias são usados nas páginas.
+O site lê diretamente a base D1 vinculada como `DB`. Ele reconhece tanto o registro `global` da tabela `pso_bot_state` quanto as tabelas separadas `contracts`, `registrations` e `teams`. O estado completo permanece no servidor; somente jogadores, imagens públicas, clubes e movimentações necessárias são usados nas páginas.
 
 Não são necessários `PSO_API_URL`, `PSO_API_KEY` ou `PSO_GUILD_ID`. O bot também não precisa estar ligado para o site consultar o último estado salvo na base.
 

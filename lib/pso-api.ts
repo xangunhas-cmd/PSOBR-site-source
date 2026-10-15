@@ -62,6 +62,8 @@ type BotState = {
 
 export type PsoApiState = 'connected' | 'not-configured' | 'unavailable';
 
+type DatabaseRow = Record<string,unknown>;
+
 function parsePayload(value:unknown):BotState|null{
   try{
     const parsed=typeof value==='string'?JSON.parse(value):value;
@@ -75,11 +77,66 @@ async function loadBotState():Promise<BotState|null>{
   if(!env.DB) return null;
   try{
     const row=await env.DB.prepare('SELECT payload FROM pso_bot_state WHERE id = ?').bind('global').first<{payload:unknown}>();
-    return parsePayload(row?.payload);
+    const payload=parsePayload(row?.payload);
+    if(payload) return payload;
+  }catch{
+    // Algumas versões do bot salvam cada conjunto em uma tabela separada.
+  }
+
+  try{
+    const [registrationsResult,contractsResult,teamsResult]=await Promise.all([
+      env.DB.prepare('SELECT * FROM registrations').all<DatabaseRow>(),
+      env.DB.prepare('SELECT * FROM contracts').all<DatabaseRow>(),
+      env.DB.prepare('SELECT * FROM teams').all<DatabaseRow>(),
+    ]);
+    const registrations=Object.fromEntries(registrationsResult.results.map((row,index)=>{
+      const userId=textValue(row,'userId','user_id','discordId','discord_id','playerId','player_id')||String(index);
+      return [userId,{
+        userId,
+        nickname:textValue(row,'nickname','name','displayName','display_name'),
+        position:textValue(row,'position','posicao'),
+        characterPhotoUrl:textValue(row,'characterPhotoUrl','character_photo_url','photoUrl','photo_url','imageUrl','image_url'),
+      } satisfies BotRegistration];
+    }));
+    const contracts=Object.fromEntries(contractsResult.results.map((row,index)=>{
+      const id=textValue(row,'id','contractId','contract_id')||String(index);
+      const dismissal=parsePayload(row.dismissal) as {dismissedAt?:string}|null;
+      return [id,{
+        id,
+        playerId:textValue(row,'playerId','player_id','userId','user_id'),
+        teamId:textValue(row,'teamId','team_id','clubId','club_id'),
+        newTeam:textValue(row,'newTeam','new_team','teamName','team_name','club'),
+        oldTeam:textValue(row,'oldTeam','old_team','previousClub','previous_club'),
+        status:textValue(row,'status'),
+        acceptedAt:textValue(row,'acceptedAt','accepted_at'),
+        signedAt:textValue(row,'signedAt','signed_at','createdAt','created_at'),
+        expiredAt:textValue(row,'expiredAt','expired_at'),
+        endSeason:textValue(row,'endSeason','end_season'),
+        dismissal:dismissal||{dismissedAt:textValue(row,'dismissedAt','dismissed_at')},
+      } satisfies BotContract];
+    }));
+    const teams=Object.fromEntries(teamsResult.results.map((row,index)=>{
+      const id=textValue(row,'id','teamId','team_id','clubId','club_id')||String(index);
+      return [id,{
+        id,
+        name:textValue(row,'name','teamName','team_name','clubName','club_name'),
+        logoUrl:textValue(row,'logoUrl','logo_url','imageUrl','image_url'),
+        createdAt:textValue(row,'createdAt','created_at'),
+      } satisfies BotTeam];
+    }));
+    return {registrations,contracts,teams};
   }catch(error){
     console.error('Database do bot indisponível:',error instanceof Error?error.message:error);
     return null;
   }
+}
+
+function textValue(row:DatabaseRow,...names:string[]):string|undefined{
+  for(const name of names){
+    const value=row[name];
+    if(value!==undefined&&value!==null&&String(value).trim()) return String(value);
+  }
+  return undefined;
 }
 
 function eventTime(value:string|number|null|undefined){
