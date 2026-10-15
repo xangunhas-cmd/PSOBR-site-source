@@ -11,8 +11,11 @@ export type NewsItem = {
   href: string;
 };
 
+export type MarketTransactionType = 'transfer' | 'dismissal' | 'contract_expired';
+
 export type Transfer = {
   id: string;
+  transactionType: MarketTransactionType;
   player: string;
   position?: string;
   overall?: number;
@@ -34,7 +37,7 @@ export const editorialNews: NewsItem[] = [
 ];
 
 export function isHeadlineTransfer(transfer: Transfer) {
-  return typeof transfer.overall === 'number' && transfer.overall >= 84;
+  return transfer.transactionType === 'transfer' && typeof transfer.overall === 'number' && transfer.overall >= 84;
 }
 
 export function transferToNews(transfer: Transfer): NewsItem {

@@ -56,14 +56,29 @@ export async function psoApi<T>(path:string,params:Record<string,string|number|b
   return response.json() as Promise<T>;
 }
 
+async function psoApiListAll<T>(path:string):Promise<T[]>{
+  const limit=100;
+  const items:T[]=[];
+  let offset=0;
+  for(let page=0;page<1000;page+=1){
+    const payload=await psoApi<PsoList<T>>(path,{limit,offset});
+    const batch=Array.isArray(payload.data)?payload.data:[];
+    items.push(...batch);
+    offset+=batch.length;
+    const total=payload.pagination?.total;
+    if(batch.length===0||batch.length<limit||(typeof total==='number'&&offset>=total)) break;
+  }
+  return items;
+}
+
 export async function getPsoMarketSnapshot():Promise<{state:PsoApiState;events:PsoMarketEvent[];players:PsoPlayer[]}>{
   if(!isPsoApiConfigured()) return {state:'not-configured',events:[],players:[]};
   try{
     const [events,players]=await Promise.all([
-      psoApi<PsoList<PsoMarketEvent>>('/api/market/events',{limit:100}),
-      psoApi<PsoList<PsoPlayer>>('/api/players',{limit:100}),
+      psoApiListAll<PsoMarketEvent>('/api/market/events'),
+      psoApiListAll<PsoPlayer>('/api/players'),
     ]);
-    return {state:'connected',events:events.data||[],players:players.data||[]};
+    return {state:'connected',events,players};
   }catch(error){
     console.error('PSO API indisponível:',error instanceof Error?error.message:error);
     return {state:'unavailable',events:[],players:[]};

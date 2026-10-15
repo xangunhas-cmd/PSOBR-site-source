@@ -2,7 +2,7 @@
 
 ## Integração com o bot completo
 
-O bot completo roda como um processo Node.js separado e expõe uma API HTTP somente de leitura. O site consulta essa API apenas no servidor e cruza o nickname de cada transferência com `lib/catalog.ts`. Quando encontra uma carta com overall 84 ou maior, a transferência também aparece automaticamente em Notícias com a imagem da carta.
+O bot completo roda como um processo Node.js separado e expõe uma API HTTP somente de leitura. O site consulta todas as páginas de eventos da API e publica transferências, demissões e contratos encerrados. O nickname é cruzado com `lib/catalog.ts`; quando uma transferência encontra uma carta com overall 84 ou maior, ela também aparece automaticamente em Notícias com a imagem da carta.
 
 Configure estes segredos no Worker do site; nunca os coloque no GitHub ou em código enviado ao navegador:
 
