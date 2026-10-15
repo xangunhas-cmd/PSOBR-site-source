@@ -1,18 +1,12 @@
 # Bot do Discord — PSO Brasil
 
-## Integração com o bot completo
+## Integração direta com a base do bot
 
-O bot completo roda como um processo Node.js separado e expõe uma API HTTP somente de leitura. O site consulta todas as páginas de eventos da API e publica transferências, demissões e contratos encerrados. O nickname é cruzado com `lib/catalog.ts`; quando uma transferência encontra uma carta com overall 84 ou maior, ela também aparece automaticamente em Notícias com a imagem da carta.
+O site lê diretamente o registro `global` da tabela `pso_bot_state` na base D1 vinculada como `DB`. O estado completo permanece no servidor; somente jogadores, imagens públicas, clubes e movimentações necessárias são usados nas páginas.
 
-Configure estes segredos no Worker do site; nunca os coloque no GitHub ou em código enviado ao navegador:
+Não são necessários `PSO_API_URL`, `PSO_API_KEY` ou `PSO_GUILD_ID`. O bot também não precisa estar ligado para o site consultar o último estado salvo na base.
 
-```env
-PSO_API_URL=https://endereco-publico-da-api-do-bot
-PSO_API_KEY=chave-nova-compartilhada-com-o-bot
-PSO_GUILD_ID=id-do-servidor
-```
-
-No processo do bot, `MARKET_API_KEY` deve ter o mesmo valor de `PSO_API_KEY`. A API deve usar HTTPS e `API_ALLOWED_ORIGIN=https://psobr-site-source.xangunhas.workers.dev`.
+O site publica transferências, demissões e contratos encerrados. O nickname é cruzado com `lib/catalog.ts`; quando uma transferência encontra uma carta com overall 84 ou maior, ela também aparece automaticamente em Notícias com a imagem da carta. Caso não exista carta, a foto pública de registro do jogador é usada.
 
 O bot completo recebe comandos pelo Gateway do Discord. Ao migrar para ele, remova o Interactions Endpoint URL da aplicação anterior ou use uma aplicação Discord separada, para evitar que os comandos sejam desviados para o endpoint antigo do site.
 

@@ -40,7 +40,7 @@ export async function getTransferFeed():Promise<{transfers:Transfer[];apiState:P
       toClub:transactionType==='transfer'?(event.toClub||event.club||player?.club?.name||'Novo clube'):'Livre',
       date:formatDate(event.at!),
       sourceUrl:'/transferencias',
-      image:card?.image,
+      image:card?.image||player?.image||event.playerImage||undefined,
     } satisfies Transfer;
   });
   const merged=new Map<string,Transfer>();

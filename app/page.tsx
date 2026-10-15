@@ -35,7 +35,7 @@ export default async function Home(){
 
       <section className="portal-section home-market" data-reveal>
         <div className="direct-section-title"><div><p className="kicker">MERCADO</p><h2>Transferências</h2></div><a href="/transferencias">Abrir mercado →</a></div>
-        <div className="home-market-bar"><span><i/> BOT DO DISCORD</span><strong>{transfers.length?`${transfers.length} movimentos`:'Aguardando conexão'}</strong><small>Overall 84+ vira notícia automaticamente.</small></div>
+        <div className="home-market-bar"><span><i/> DATABASE DO MERCADO</span><strong>{transfers.length?`${transfers.length} movimentos`:'Aguardando dados'}</strong><small>Overall 84+ vira notícia automaticamente.</small></div>
       </section>
 
       <section className="portal-section" data-reveal>
