@@ -53,6 +53,8 @@ type BotTeam = {
   name?: string;
   logoUrl?: string | null;
   createdAt?: string | null;
+  players?: string[];
+  ownerId?: string | null;
 };
 
 type BotState = {
@@ -133,11 +135,19 @@ async function loadBotState():Promise<BotState|null>{
     }));
     const teams=Object.fromEntries(teamsResult.results.map((row,index)=>{
       const id=textValue(row,'id','teamId','team_id','clubId','club_id')||String(index);
+      const rawPlayers=row.players;
+      let players:string[]=[];
+      try{
+        const parsed=typeof rawPlayers==='string'?JSON.parse(rawPlayers):rawPlayers;
+        if(Array.isArray(parsed)) players=parsed.map(String);
+      }catch{}
       return [id,{
         id,
         name:textValue(row,'name','teamName','team_name','clubName','club_name'),
         logoUrl:textValue(row,'logoUrl','logo_url','imageUrl','image_url'),
         createdAt:textValue(row,'createdAt','created_at'),
+        players,
+        ownerId:textValue(row,'ownerId','owner_id'),
       } satisfies BotTeam];
     }));
     return {registrations,contracts,teams};
@@ -159,6 +169,51 @@ function eventTime(value:string|number|null|undefined){
   if(value===undefined||value===null) return null;
   const text=String(value);
   return Number.isNaN(new Date(text).getTime())?null:text;
+}
+
+export type PsoClubPlayer = {
+  id: string;
+  nickname: string;
+  position?: string | null;
+  image?: string | null;
+};
+
+export type PsoClub = {
+  id: string;
+  name: string;
+  logoUrl?: string | null;
+  createdAt?: string | null;
+  players: PsoClubPlayer[];
+};
+
+export async function getPsoClubs():Promise<{state:PsoApiState;clubs:PsoClub[]}>
+{
+  if(!env.DATABASE_URL&&!env.DB) return {state:'not-configured',clubs:[]};
+  const payload=await loadBotState();
+  if(!payload) return {state:'unavailable',clubs:[]};
+
+  const registrations=Object.values(payload.registrations||{});
+  const contracts=Object.values(payload.contracts||{});
+  const registrationsById=new Map(registrations.filter(item=>item.userId).map(item=>[item.userId!,item]));
+
+  const clubs=Object.values(payload.teams||{}).filter(team=>team.id&&team.name).map(team=>{
+    const contractedPlayers=contracts
+      .filter(contract=>contract.teamId===team.id&&contract.status==='active'&&contract.playerId)
+      .map(contract=>contract.playerId!);
+    const playerIds=[...new Set([...(team.players||[]),...contractedPlayers])];
+    const players=playerIds.map(id=>{
+      const registration=registrationsById.get(id);
+      return {
+        id,
+        nickname:registration?.nickname||'Jogador sem cadastro',
+        position:registration?.position||null,
+        image:registration?.characterPhotoUrl||null,
+      } satisfies PsoClubPlayer;
+    }).sort((a,b)=>a.nickname.localeCompare(b.nickname,'pt-BR'));
+    return {id:team.id!,name:team.name!,logoUrl:team.logoUrl||null,createdAt:team.createdAt||null,players} satisfies PsoClub;
+  }).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+
+  return {state:'connected',clubs};
 }
 
 export async function getPsoMarketSnapshot():Promise<{state:PsoApiState;events:PsoMarketEvent[];players:PsoPlayer[]}>
