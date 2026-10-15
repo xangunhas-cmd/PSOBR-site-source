@@ -2,9 +2,9 @@
 
 ## Integração direta com a base do bot
 
-O site lê diretamente a base D1 vinculada como `DB`. Ele reconhece tanto o registro `global` da tabela `pso_bot_state` quanto as tabelas separadas `contracts`, `registrations` e `teams`. O estado completo permanece no servidor; somente jogadores, imagens públicas, clubes e movimentações necessárias são usados nas páginas.
+O site lê diretamente o PostgreSQL definido no segredo `DATABASE_URL`. O bot mantém o registro `global` na tabela `pso_bot_state`. O estado completo permanece no servidor; somente jogadores, imagens públicas, clubes e movimentações necessárias são usados nas páginas. O D1 vinculado como `DB` continua guardando o conteúdo editorial do site.
 
-Não são necessários `PSO_API_URL`, `PSO_API_KEY` ou `PSO_GUILD_ID`. O bot também não precisa estar ligado para o site consultar o último estado salvo na base.
+Não são necessários `PSO_API_URL`, `PSO_API_KEY` ou `PSO_GUILD_ID`. O bot também não precisa estar ligado para o site consultar o último estado salvo na base. Em produção, `DATABASE_URL` deve ser configurada como segredo do Worker e nunca incluída no GitHub.
 
 O site publica transferências, demissões e contratos encerrados. O nickname é cruzado com `lib/catalog.ts`; quando uma transferência encontra uma carta com overall 84 ou maior, ela também aparece automaticamente em Notícias com a imagem da carta. Caso não exista carta, a foto pública de registro do jogador é usada.
 

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import {env} from 'cloudflare:workers';
+import {Client} from 'pg';
 
 export type PsoPlayer = {
   id: string;
@@ -74,6 +75,21 @@ function parsePayload(value:unknown):BotState|null{
 }
 
 async function loadBotState():Promise<BotState|null>{
+  const connectionString=env.DATABASE_URL?.trim();
+  if(connectionString){
+    const client=new Client({connectionString});
+    try{
+      await client.connect();
+      const result=await client.query<{payload:unknown}>('SELECT payload FROM pso_bot_state WHERE id = $1 LIMIT 1',['global']);
+      const payload=parsePayload(result.rows[0]?.payload);
+      if(payload) return payload;
+    }catch(error){
+      console.error('PostgreSQL do bot indisponível:',error instanceof Error?error.message:error);
+    }finally{
+      await client.end().catch(()=>{});
+    }
+  }
+
   if(!env.DB) return null;
   try{
     const row=await env.DB.prepare('SELECT payload FROM pso_bot_state WHERE id = ?').bind('global').first<{payload:unknown}>();
@@ -147,7 +163,7 @@ function eventTime(value:string|number|null|undefined){
 
 export async function getPsoMarketSnapshot():Promise<{state:PsoApiState;events:PsoMarketEvent[];players:PsoPlayer[]}>
 {
-  if(!env.DB) return {state:'not-configured',events:[],players:[]};
+  if(!env.DATABASE_URL&&!env.DB) return {state:'not-configured',events:[],players:[]};
   const payload=await loadBotState();
   if(!payload) return {state:'unavailable',events:[],players:[]};
 
